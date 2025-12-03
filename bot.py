@@ -4,8 +4,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQu
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-API_TOKEN = "8486226213:AAHPHbonxvL2_vXORpOFRzL9NdUqcc9MJtI"
-ADMIN_ID = 6347698601   # сюда будет приходить заказ (замени!)
+API_TOKEN = os.getenv("TOKEN")
+ADMIN_ID = int(os.getenv("ADMIN_ID"))
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
@@ -35,7 +35,6 @@ PRODUCTS = {
     }
 }
 
-# Корзины пользователей: user_id -> {product_id: qty}
 CART = {}
 
 
@@ -77,7 +76,6 @@ async def open_product(callback: CallbackQuery):
     pid = int(callback.data.split("_")[1])
     product = PRODUCTS[pid]
 
-    # кнопки товара
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text="➖", callback_data=f"minus_{pid}"),
@@ -171,7 +169,6 @@ async def checkout(callback: CallbackQuery):
         await callback.answer("Корзина пуста!")
         return
 
-    # собираем заказ
     order_text = f"🆕 *Новый заказ от @{callback.from_user.username}:*\n\n"
     total = 0
     for pid, qty in CART[user_id].items():
@@ -180,10 +177,8 @@ async def checkout(callback: CallbackQuery):
         total += item["price"] * qty
     order_text += f"\n💰 *Итого: {total} грн*"
 
-    # отправляем админу
     await bot.send_message(ADMIN_ID, order_text, parse_mode="Markdown")
 
-    # очищаем корзину
     CART[user_id] = {}
 
     await callback.message.answer("🎉 Ваш заказ отправлен!\nМы скоро свяжемся с вами.")
@@ -198,3 +193,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
